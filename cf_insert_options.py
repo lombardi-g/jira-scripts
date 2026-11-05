@@ -3,7 +3,6 @@ import os
 import requests
 from requests.auth import HTTPBasicAuth
 
-# Configuration
 api_token = "abc"
 email = "abc@example.com"
 base_url = "https://instancename.atlassian.net/"
