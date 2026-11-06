@@ -1,25 +1,40 @@
 import csv
 import os
 import requests
+from dotenv import load_dotenv
 from requests.auth import HTTPBasicAuth
 
-api_token = "abc"
-email = "abc@example.com"
-base_url = "https://instancename.atlassian.net/"
-field_number = 12345
-input_file_path = "OptionsList.csv"
 
-auth = HTTPBasicAuth(email, api_token)
-headers = {
+load_dotenv()
+
+API_TOKEN = os.getenv("JIRA_API_TOKEN")
+EMAIL = os.getenv("JIRA_EMAIL")
+BASE_URL = os.getenv("JIRA_BASE_URL", "").rstrip("/")
+FIELD_NUMBER = os.getenv("JIRA_FIELD_NUMBER")
+INPUT_FILE_PATH = os.getenv("INPUT_FILE_PATH", "OptionsList.csv")
+
+REQUIRED_VARS = {
+    "JIRA_API_TOKEN": API_TOKEN,
+    "JIRA_EMAIL": EMAIL,
+    "JIRA_BASE_URL": BASE_URL,
+    "JIRA_FIELD_NUMBER": FIELD_NUMBER,
+}
+missing = [key for key, value in REQUIRED_VARS.items() if not value]
+if missing:
+    raise EnvironmentError(
+        f"Missing required environment variables: {', '.join(missing)}"
+    )
+
+AUTH = HTTPBasicAuth(EMAIL, API_TOKEN)
+HEADERS = {
     "Accept": "application/json",
     "Content-Type": "application/json",
 }
 
 
 def get_field_context_id(field_num):
-    """Retrieves the primary context ID for the custom field."""
-    url = f"{base_url}/rest/api/3/field/customfield_{field_num}/context"
-    response = requests.get(url, headers=headers, auth=auth)
+    url = f"{BASE_URL}/rest/api/3/field/customfield_{field_num}/context"
+    response = requests.get(url, headers=HEADERS, auth=AUTH)
 
     if response.status_code == 200:
         data = response.json()
@@ -34,29 +49,25 @@ def get_field_context_id(field_num):
 
 def add_custom_field_options(context_id, options):
     """Creates new options using the current Jira Cloud v3 endpoint."""
-    # Updated path: /field/customfield_{id}/context/{contextId}/option
-    url = f"{base_url}/rest/api/3/field/customfield_{field_number}/context/{context_id}/option"
-
+    url = f"{BASE_URL}/rest/api/3/field/customfield_{FIELD_NUMBER}/context/{context_id}/option"
     payload = {"options": [{"value": opt} for opt in options]}
-
-    response = requests.post(url, json=payload, headers=headers, auth=auth)
-    return response
+    return requests.post(url, json=payload, headers=HEADERS, auth=AUTH)
 
 
 def process_options():
     print("Starting option import...")
 
-    if not os.path.exists(input_file_path):
-        print(f"[ERROR] File not found at: {os.path.abspath(input_file_path)}")
+    if not os.path.exists(INPUT_FILE_PATH):
+        print(f"[ERROR] File not found at: {os.path.abspath(INPUT_FILE_PATH)}")
         return
 
-    context_id = get_field_context_id(field_number)
+    context_id = get_field_context_id(FIELD_NUMBER)
     if not context_id:
         print("[ABORTED] Missing Context ID.")
         return
 
     options_to_add = []
-    with open(input_file_path, mode="r", encoding="utf-8-sig") as input_file:
+    with open(INPUT_FILE_PATH, mode="r", encoding="utf-8-sig") as input_file:
         reader = csv.DictReader(input_file)
         for row in reader:
             option_val = row.get("Options", "").strip()
@@ -68,7 +79,7 @@ def process_options():
         return
 
     print(
-        f"Found {len(options_to_add)} options. Adding to field customfield_{field_number} (Context: {context_id})..."
+        f"Found {len(options_to_add)} options. Adding to field customfield_{FIELD_NUMBER} (Context: {context_id})..."
     )
 
     response = add_custom_field_options(context_id, options_to_add)
