@@ -1,4 +1,4 @@
-# ⚡ Jira Cloud Admin Automations
+# Jira Cloud Admin Automations
 
 [![Jira](https://img.shields.io/badge/Jira-0052CC?logo=jira&logoColor=fff)](#)
 [![Python](https://img.shields.io/badge/Python-3.9+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
@@ -8,7 +8,7 @@ A personal collection of Python automation scripts designed to eliminate repetit
 
 ---
 
-## 🛠️ Included Automations
+## Included Automations
 
 ### 1. Bulk Custom Field Option Importer
 Automates adding new selectable options to an existing Jira custom field (such as single-select or multi-select dropdowns).
@@ -22,7 +22,7 @@ Automates attaching multiple existing custom fields to a specific Jira Screen.
 
 ---
 
-## 📄 CSV Formatting & Usage
+## CSV Formatting & Usage
 
 ### Running Script 1: Bulk Custom Field Option Importer
 
